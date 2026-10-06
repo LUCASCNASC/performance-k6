@@ -1,0 +1,85 @@
+name: API checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BASE_URL: ${{ vars.SERVEREST_BASE_URL || 'https://serverest.dev' }}
+  USER_EMAIL: ${{ secrets.SERVEREST_USER_EMAIL || 'fulano@qa.com' }}
+  USER_PASSWORD: ${{ secrets.SERVEREST_USER_PASSWORD || 'teste' }}
+  USER_ID: ${{ vars.SERVEREST_USER_ID || '0uxuPY0cbmQhpEz1' }}
+  PRODUCT_ID: ${{ vars.SERVEREST_PRODUCT_ID || 'BeeJh5lz3k6kSIzA' }}
+  CART_ID: ${{ vars.SERVEREST_CART_ID || 'qbMqntef4iTOwWfg' }}
+
+jobs:
+  tests:
+    name: Validate scripts and API contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Validate OpenAPI contract
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const spec = JSON.parse(readFileSync("serverest.json", "utf8"));
+            const required = ["/login", "/usuarios", "/usuarios/{_id}", "/produtos", "/produtos/{_id}", "/carrinhos", "/carrinhos/{_id}"];
+            const missing = required.filter((path) => !spec.paths?.[path]);
+            if (missing.length) {
+              console.error(`Missing API paths: ${missing.join(", ")}`);
+              process.exit(1);
+            }
+            console.log(`OpenAPI ${spec.info.version}: required paths are present.`);
+          '
+
+      - name: Inspect k6 scripts
+        run: |
+          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js; do
+            k6 inspect "$script"
+          done
+
+  smoke:
+    name: Smoke test (${{ matrix.script }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [login, users, products, carts]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run smoke test
+        run: k6 run "scripts/smoke/${{ matrix.script }}.js"
+
+  health:
+    name: Check application health
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check API availability and response
+        run: |
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 2 \
+            --max-time 15 \
+            "$BASE_URL/produtos" \
+            | jq -e '(.quantidade | type == "number") and (.produtos | type == "array")' > /dev/null
