@@ -1,8 +1,8 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import { BASE_URL, options } from './common.js';
+import { BASE_URL, SMOKE_OPTIONS } from '../common.js';
 
-export { options };
+export const options = SMOKE_OPTIONS;
 
 export default function () {
   const payload = JSON.stringify({
