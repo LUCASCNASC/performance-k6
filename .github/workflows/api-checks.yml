@@ -44,7 +44,7 @@ jobs:
 
       - name: Inspect k6 scripts
         run: |
-          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js; do
+          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js scripts/load/login.js scripts/load/users.js scripts/load/products.js scripts/load/carts.js; do
             k6 inspect "$script"
           done
 

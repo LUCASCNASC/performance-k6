@@ -26,7 +26,20 @@ export function checkJsonResponse(response, name, expectedShape) {
   return body;
 }
 
-export const options = {
+export const SMOKE_OPTIONS = {
   vus: 1,
   iterations: 1,
+};
+
+export const LOAD_OPTIONS = {
+  stages: [
+    { duration: '10s', target: 1 },
+    { duration: '10s', target: 5 },
+    { duration: '30s', target: 5 },
+    { duration: '10s', target: 0 },
+  ],
+  thresholds: {
+    checks: ['rate==1'],
+    http_req_failed: ['rate<0.05'],
+  },
 };

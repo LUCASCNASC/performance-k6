@@ -1,7 +1,7 @@
 import http from 'k6/http';
-import { BASE_URL, USER_ID, checkJsonResponse, options } from './common.js';
+import { BASE_URL, USER_ID, checkJsonResponse, SMOKE_OPTIONS } from '../common.js';
 
-export { options };
+export const options = SMOKE_OPTIONS;
 
 export default function () {
   const usersResponse = http.get(`${BASE_URL}/usuarios`, {
