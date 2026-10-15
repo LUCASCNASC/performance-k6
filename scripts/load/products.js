@@ -1,4 +1,5 @@
 import http from 'k6/http';
+import { sleep } from 'k6';
 import { BASE_URL, LOAD_OPTIONS, PRODUCT_ID, checkJsonResponse } from '../common.js';
 
 export const options = LOAD_OPTIONS;
@@ -21,4 +22,6 @@ export default function () {
     'Consulta de produto por ID',
     (body) => typeof body._id === 'string' && typeof body.nome === 'string',
   );
+
+  sleep(1);
 }

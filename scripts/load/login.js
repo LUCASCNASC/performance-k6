@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check } from 'k6';
+import { check, sleep } from 'k6';
 import { BASE_URL, LOAD_OPTIONS } from '../common.js';
 
 export const options = LOAD_OPTIONS;
@@ -31,4 +31,6 @@ export default function () {
     'Login: mensagem de sucesso': () => body !== null && body.message === 'Login realizado com sucesso',
     'Login: token de autorização presente': () => body !== null && typeof body.authorization === 'string' && body.authorization.length > 0,
   });
+
+  sleep(1);
 }
