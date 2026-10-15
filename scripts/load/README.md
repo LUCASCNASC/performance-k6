@@ -4,7 +4,7 @@ Os cenários exercitam os mesmos endpoints dos smoke tests: login, listagem/cons
 
 ## Perfil padrão
 
-O perfil padrão em `LOAD_OPTIONS` dura 1 minuto: sobe de 0 a 1 VU nos primeiros 10 segundos, chega a 5 VUs nos 10 segundos seguintes, mantém 5 VUs por 30 segundos e reduz a carga a zero nos últimos 10 segundos.
+O perfil padrão em `LOAD_OPTIONS` dura 1 minuto: sobe de 0 a 1 VU nos primeiros 10 segundos, chega a 5 VUs nos 10 segundos seguintes, mantém 5 VUs por 30 segundos e reduz a carga a zero nos últimos 10 segundos. Cada VU aguarda 1 segundo ao fim de cada iteração para manter uma carga controlada em vez de disparar requisições sem pausa.
 
 O cenário falha se algum check de contrato/status falhar ou se a taxa de requisições HTTP com erro atingir 5%. Não há threshold de latência definido, pois o contrato não estabelece um SLA.
 
