@@ -1,8 +1,10 @@
 # Smoke tests do ServeRest
 
-Os scripts cobrem as consultas de usuários, produtos e carrinhos e a autenticação documentadas em `serverest.json`. Cada execução roda uma vez, com um VU. Configurações e verificações compartilhadas estão em [`scripts/common.js`](../common.js).
+Os quatro scripts cobrem os métodos documentados em `serverest.json`: login; listagem, criação, consulta, atualização e exclusão de usuários e produtos; e listagem, criação, consulta, cancelamento e conclusão de carrinhos. Cada execução roda uma vez, com um VU. Configurações e verificações compartilhadas estão em [`scripts/common.js`](../common.js).
 
-Os scripts são seguros para ambientes compartilhados: não criam, alteram ou excluem registros. `login.js` envia apenas uma solicitação de autenticação.
+Os testes que alteram dados criam registros temporários com valores únicos, validam o estado após atualizações/exclusões e tentam limpar os registros ao final. `login.js` usa as credenciais de exemplo do contrato por padrão; defina credenciais válidas para o ambiente configurado se necessário.
+
+As verificações de exclusão consultam o recurso novamente e esperam `400` com a mensagem de não encontrado. Por isso, o indicador `http_req_failed` do k6 pode incluir essas respostas esperadas; o resultado do smoke é determinado pelos checks, que precisam ficar em 100%.
 
 ## Executar
 
@@ -15,16 +17,13 @@ k6 run .\scripts\smoke\products.js
 k6 run .\scripts\smoke\carts.js
 ```
 
-Por padrão, as chamadas usam `https://serverest.dev`. Os dados de login e IDs abaixo vêm dos exemplos do contrato OpenAPI e podem ser substituídos por variáveis de ambiente:
+Por padrão, as chamadas usam `https://serverest.dev`. Configure a URL e, se necessário, as credenciais de login:
 
 | Variável | Padrão | Usada por |
 | --- | --- | --- |
 | `BASE_URL` | `https://serverest.dev` | Todos |
 | `USER_EMAIL` | `fulano@qa.com` | `login.js` |
 | `USER_PASSWORD` | `teste` | `login.js` |
-| `USER_ID` | `0uxuPY0cbmQhpEz1` | `users.js` |
-| `PRODUCT_ID` | `BeeJh5lz3k6kSIzA` | `products.js` |
-| `CART_ID` | `qbMqntef4iTOwWfg` | `carts.js` |
 
 Exemplo no PowerShell:
 
@@ -32,18 +31,15 @@ Exemplo no PowerShell:
 $env:BASE_URL = "https://serverest.dev"
 $env:USER_EMAIL = "fulano@qa.com"
 $env:USER_PASSWORD = "teste"
-$env:USER_ID = "0uxuPY0cbmQhpEz1"
-$env:PRODUCT_ID = "BeeJh5lz3k6kSIzA"
-$env:CART_ID = "qbMqntef4iTOwWfg"
 ```
 
-Use IDs existentes no ambiente configurado. Valores de credenciais podem ser fornecidos pelo ambiente para evitar mantê-los em arquivos do projeto.
+`users.js`, `products.js` e `carts.js` criam seus próprios dados de teste; não é necessário configurar IDs existentes. Os usuários e produtos temporários são removidos durante a execução.
 
 ## GitHub Actions
 
 O workflow [API checks](../../.github/workflows/api-checks.yml) é executado em `push`, `pull_request` e sob demanda. Ele valida o contrato OpenAPI e a sintaxe/carregamento dos scripts k6, executa cada smoke test em seu próprio job e verifica a disponibilidade da API com `GET /produtos`.
 
-O ServeRest não documenta um endpoint dedicado de health check; por isso, o job `health` usa `GET /produtos` e valida o status HTTP e o formato básico da resposta. O job `tests` valida o contrato e carrega os scripts de smoke e carga com `k6 inspect`; este repositório ainda não contém uma suíte pytest ou testes unitários separados.
+O ServeRest não documenta um endpoint dedicado de health check; por isso, o job `health` usa `GET /produtos` e valida o status HTTP e o formato básico da resposta. O job `tests` valida cada combinação de método e rota do contrato e carrega os scripts de smoke e carga com `k6 inspect`.
 
 Para apontar o workflow a outro ambiente, configure as variáveis de repositório `SERVEREST_BASE_URL`, `SERVEREST_USER_ID`, `SERVEREST_PRODUCT_ID` e `SERVEREST_CART_ID`. As credenciais podem ser configuradas como secrets `SERVEREST_USER_EMAIL` e `SERVEREST_USER_PASSWORD`; na ausência delas, são usados os exemplos públicos do contrato ServeRest.
 

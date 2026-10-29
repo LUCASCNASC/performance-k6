@@ -33,13 +33,32 @@ jobs:
           node --input-type=module -e '
             import { readFileSync } from "node:fs";
             const spec = JSON.parse(readFileSync("serverest.json", "utf8"));
-            const required = ["/login", "/usuarios", "/usuarios/{_id}", "/produtos", "/produtos/{_id}", "/carrinhos", "/carrinhos/{_id}"];
-            const missing = required.filter((path) => !spec.paths?.[path]);
+            const required = [
+              ["post", "/login"],
+              ["get", "/usuarios"],
+              ["post", "/usuarios"],
+              ["get", "/usuarios/{_id}"],
+              ["put", "/usuarios/{_id}"],
+              ["delete", "/usuarios/{_id}"],
+              ["get", "/produtos"],
+              ["post", "/produtos"],
+              ["get", "/produtos/{_id}"],
+              ["put", "/produtos/{_id}"],
+              ["delete", "/produtos/{_id}"],
+              ["get", "/carrinhos"],
+              ["post", "/carrinhos"],
+              ["get", "/carrinhos/{_id}"],
+              ["delete", "/carrinhos/concluir-compra"],
+              ["delete", "/carrinhos/cancelar-compra"],
+            ];
+            const missing = required
+              .filter(([method, path]) => !spec.paths?.[path]?.[method])
+              .map(([method, path]) => `${method.toUpperCase()} ${path}`);
             if (missing.length) {
-              console.error(`Missing API paths: ${missing.join(", ")}`);
+              console.error(`Missing API operations: ${missing.join(", ")}`);
               process.exit(1);
             }
-            console.log(`OpenAPI ${spec.info.version}: required paths are present.`);
+            console.log(`OpenAPI ${spec.info.version}: all ${required.length} operations are present.`);
           '
 
       - name: Inspect k6 scripts
@@ -54,6 +73,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         script: [login, users, products, carts]
     steps:
