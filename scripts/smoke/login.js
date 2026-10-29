@@ -1,6 +1,5 @@
 import http from 'k6/http';
-import { check } from 'k6';
-import { BASE_URL, SMOKE_OPTIONS } from '../common.js';
+import { BASE_URL, checkJsonStatusResponse, SMOKE_OPTIONS } from '../common.js';
 
 export const options = SMOKE_OPTIONS;
 
@@ -15,20 +14,13 @@ export default function () {
     tags: { name: 'smoke.login' },
   });
 
-  let body;
-  try {
-    body = JSON.parse(response.body);
-  } catch (error) {
-    check(response, {
-      'Login: HTTP 200': (res) => res.status === 200,
-      'Login: corpo JSON válido': () => false,
-    });
-    return;
-  }
-
-  check(response, {
-    'Login: HTTP 200': (res) => res.status === 200,
-    'Login: mensagem de sucesso': () => body !== null && body.message === 'Login realizado com sucesso',
-    'Login: token de autorização presente': () => body !== null && typeof body.authorization === 'string' && body.authorization.length > 0,
-  });
+  checkJsonStatusResponse(
+    response,
+    'Login',
+    200,
+    (body) =>
+      body.message === 'Login realizado com sucesso' &&
+      typeof body.authorization === 'string' &&
+      body.authorization.length > 0,
+  );
 }

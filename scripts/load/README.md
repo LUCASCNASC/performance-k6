@@ -1,6 +1,6 @@
 # Load tests do ServeRest
 
-Os cenários exercitam os mesmos endpoints dos smoke tests: login, listagem/consulta de usuários, listagem/consulta de produtos e listagem/consulta de carrinhos. Todos são somente leitura, exceto o login, que apenas autentica. Configuração, dados de ambiente e verificações compartilhados por todas as categorias de teste ficam em [`scripts/common.js`](../common.js).
+Os cenários de carga exercitam login, listagem e consulta de usuários, produtos e carrinhos. São somente leitura, exceto o login, que apenas autentica. A cobertura de criação, atualização, exclusão e fluxo de compra está nos smoke tests; não é executada sob carga. Configuração, dados de ambiente e verificações compartilhados por todas as categorias ficam em [`scripts/common.js`](../common.js).
 
 ## Perfil padrão
 
