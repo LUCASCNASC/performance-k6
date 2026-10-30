@@ -28,44 +28,8 @@ jobs:
       - name: Set up k6
         uses: grafana/setup-k6-action@v1
 
-      - name: Validate OpenAPI contract
-        run: |
-          node --input-type=module -e '
-            import { readFileSync } from "node:fs";
-            const spec = JSON.parse(readFileSync("serverest.json", "utf8"));
-            const required = [
-              ["post", "/login"],
-              ["get", "/usuarios"],
-              ["post", "/usuarios"],
-              ["get", "/usuarios/{_id}"],
-              ["put", "/usuarios/{_id}"],
-              ["delete", "/usuarios/{_id}"],
-              ["get", "/produtos"],
-              ["post", "/produtos"],
-              ["get", "/produtos/{_id}"],
-              ["put", "/produtos/{_id}"],
-              ["delete", "/produtos/{_id}"],
-              ["get", "/carrinhos"],
-              ["post", "/carrinhos"],
-              ["get", "/carrinhos/{_id}"],
-              ["delete", "/carrinhos/concluir-compra"],
-              ["delete", "/carrinhos/cancelar-compra"],
-            ];
-            const missing = required
-              .filter(([method, path]) => !spec.paths?.[path]?.[method])
-              .map(([method, path]) => `${method.toUpperCase()} ${path}`);
-            if (missing.length) {
-              console.error(`Missing API operations: ${missing.join(", ")}`);
-              process.exit(1);
-            }
-            console.log(`OpenAPI ${spec.info.version}: all ${required.length} operations are present.`);
-          '
-
-      - name: Inspect k6 scripts
-        run: |
-          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js scripts/load/login.js scripts/load/users.js scripts/load/products.js scripts/load/carts.js; do
-            k6 inspect "$script"
-          done
+      - name: Run fast validation
+        run: node scripts/checks/validate.mjs
 
   smoke:
     name: Smoke test (${{ matrix.script }})
