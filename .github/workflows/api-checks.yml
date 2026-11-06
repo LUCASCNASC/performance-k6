@@ -10,6 +10,8 @@ permissions:
 
 env:
   BASE_URL: ${{ vars.SERVEREST_BASE_URL || 'https://serverest.dev' }}
+  USER_EMAIL: ${{ secrets.SERVEREST_USER_EMAIL || '' }}
+  USER_PASSWORD: ${{ secrets.SERVEREST_USER_PASSWORD || '' }}
 
 jobs:
   tests:
@@ -23,25 +25,8 @@ jobs:
       - name: Set up k6
         uses: grafana/setup-k6-action@v1
 
-      - name: Validate OpenAPI contract
-        run: |
-          node --input-type=module -e '
-            import { readFileSync } from "node:fs";
-            const spec = JSON.parse(readFileSync("serverest.json", "utf8"));
-            const required = ["/login", "/usuarios", "/usuarios/{_id}", "/produtos", "/produtos/{_id}", "/carrinhos", "/carrinhos/{_id}"];
-            const missing = required.filter((path) => !spec.paths?.[path]);
-            if (missing.length) {
-              console.error(`Missing API paths: ${missing.join(", ")}`);
-              process.exit(1);
-            }
-            console.log(`OpenAPI ${spec.info.version}: required paths are present.`);
-          '
-
-      - name: Inspect k6 scripts
-        run: |
-          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js scripts/load/login.js scripts/load/users.js scripts/load/products.js scripts/load/carts.js scripts/spike/login.js scripts/spike/users.js scripts/spike/products.js scripts/spike/carts.js; do
-            k6 inspect "$script"
-          done
+      - name: Run fast validation
+        run: node scripts/checks/validate.mjs
 
   smoke:
     name: Smoke test (${{ matrix.script }})
@@ -49,6 +34,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         script: [login, users, products, carts]
     steps:

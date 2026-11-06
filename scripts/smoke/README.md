@@ -1,8 +1,12 @@
 # Smoke tests do ServeRest
 
-Os scripts cobrem as consultas de usuários, produtos e carrinhos e a autenticação documentadas em `serverest.json`. Cada execução roda uma vez, com um VU. Configurações, criação de dados temporários e verificações compartilhadas estão em [`scripts/common.js`](../common.js).
+Os quatro scripts cobrem os métodos documentados em `serverest.json`: login; listagem, criação, consulta, atualização e exclusão de usuários e produtos; e listagem, criação, consulta, cancelamento e conclusão de carrinhos. Cada execução roda uma vez, com um VU. Configurações e verificações compartilhadas estão em [`scripts/common.js`](../common.js).
 
-Como os dados do ambiente são apagados todas as noites, cada execução cria os próprios dados de teste no `setup` do k6 e os remove no `teardown`. O cenário de usuários cria um usuário; o de produtos cria um usuário administrador e um produto; o de carrinhos cria um usuário administrador, um produto e um carrinho. O cenário de login cria um usuário para autenticar. Se a limpeza falhar, o script reporta erro explicitamente.
+Os testes que alteram dados criam registros temporários com valores únicos, validam o estado após atualizações/exclusões e tentam limpar os registros ao final. `login.js` cria e remove um usuário temporário quando nenhuma credencial é configurada. Se `USER_EMAIL` e `USER_PASSWORD` forem informados juntos, testa essas credenciais; informar somente uma variável faz o check falhar.
+
+Como o ambiente pode ser limpo todas as noites, os testes não dependem de usuários, produtos ou carrinhos pré-existentes. Execute-os somente em um ambiente no qual a criação e remoção temporária desses dados esteja autorizada.
+
+As verificações de exclusão consultam o recurso novamente e esperam `400` com a mensagem de não encontrado. Por isso, o indicador `http_req_failed` do k6 pode incluir essas respostas esperadas; o resultado do smoke é determinado pelos checks, que precisam ficar em 100%.
 
 ## Executar
 
@@ -15,26 +19,30 @@ k6 run .\scripts\smoke\products.js
 k6 run .\scripts\smoke\carts.js
 ```
 
-Por padrão, as chamadas usam `https://serverest.dev`. A única variável necessária para apontar os testes a outro ambiente é:
+Por padrão, as chamadas usam `https://serverest.dev`. Configure a URL e, se necessário, as credenciais de login:
 
 | Variável | Padrão | Usada por |
 | --- | --- | --- |
 | `BASE_URL` | `https://serverest.dev` | Todos |
+| `USER_EMAIL` | vazio (usa usuário temporário) | `login.js` |
+| `USER_PASSWORD` | vazio (usa usuário temporário) | `login.js` |
 
 Exemplo no PowerShell:
 
 ```powershell
 $env:BASE_URL = "https://serverest.dev"
+$env:USER_EMAIL = "seu-usuario@exemplo.com"
+$env:USER_PASSWORD = "sua-senha"
 ```
 
-Execute somente em um ambiente no qual a criação e remoção temporária desses dados esteja autorizada.
+`users.js`, `products.js` e `carts.js` criam seus próprios dados de teste; não é necessário configurar IDs existentes. Os usuários e produtos temporários são removidos durante a execução.
 
 ## GitHub Actions
 
-O workflow [API checks](../../.github/workflows/api-checks.yml) é executado em `push`, `pull_request` e sob demanda. Ele valida o contrato OpenAPI e a sintaxe/carregamento dos scripts k6, executa cada smoke test em seu próprio job e verifica a disponibilidade da API com `GET /produtos`.
+O workflow [API checks](../../.github/workflows/api-checks.yml) é executado em `push`, `pull_request` e sob demanda. Ele valida as operações do contrato OpenAPI e a sintaxe/carregamento dos scripts k6, executa cada smoke test em seu próprio job e verifica a disponibilidade da API com `GET /produtos`.
 
-O ServeRest não documenta um endpoint dedicado de health check; por isso, o job `health` usa `GET /produtos` e valida o status HTTP e o formato básico da resposta. O job `tests` valida o contrato e carrega os scripts de smoke e carga com `k6 inspect`; este repositório ainda não contém uma suíte pytest ou testes unitários separados.
+O ServeRest não documenta um endpoint dedicado de health check; por isso, o job `health` usa `GET /produtos` e valida o status HTTP e o formato básico da resposta. O job `tests` valida cada combinação de método e rota do contrato e carrega os scripts de smoke, carga e spike com `k6 inspect`.
 
-Para apontar o workflow a outro ambiente, configure a variável de repositório `SERVEREST_BASE_URL`. Os dados de teste são criados e removidos durante cada execução dos smoke tests.
+Para apontar o workflow a outro ambiente, configure a variável de repositório `SERVEREST_BASE_URL`. Opcionalmente, configure os secrets `SERVEREST_USER_EMAIL` e `SERVEREST_USER_PASSWORD`; se ambos não forem definidos, o smoke de login cria um usuário temporário e o remove ao final.
 
-Os cenários de carga e seu perfil padrão estão documentados em [`scripts/load/README.md`](../load/README.md).
+Os cenários de carga e seu perfil padrão estão documentados em [`scripts/load/README.md`](../load/README.md); os de pico estão em [`scripts/spike/README.md`](../spike/README.md).
