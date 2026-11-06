@@ -12,9 +12,6 @@ env:
   BASE_URL: ${{ vars.SERVEREST_BASE_URL || 'https://serverest.dev' }}
   USER_EMAIL: ${{ secrets.SERVEREST_USER_EMAIL || '' }}
   USER_PASSWORD: ${{ secrets.SERVEREST_USER_PASSWORD || '' }}
-  USER_ID: ${{ vars.SERVEREST_USER_ID || '0uxuPY0cbmQhpEz1' }}
-  PRODUCT_ID: ${{ vars.SERVEREST_PRODUCT_ID || 'BeeJh5lz3k6kSIzA' }}
-  CART_ID: ${{ vars.SERVEREST_CART_ID || 'qbMqntef4iTOwWfg' }}
 
 jobs:
   tests:

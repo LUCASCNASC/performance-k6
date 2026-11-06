@@ -1,10 +1,18 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { BASE_URL, CART_ID, LOAD_OPTIONS, checkJsonResponse } from '../common.js';
+import { BASE_URL, LOAD_OPTIONS, checkJsonResponse, createFixture, teardownFixture } from '../common.js';
 
 export const options = LOAD_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('carts');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const cartsResponse = http.get(`${BASE_URL}/carrinhos`, {
     tags: { name: 'load.carts.list' },
   });
@@ -14,7 +22,7 @@ export default function () {
     (body) => Number.isInteger(body.quantidade) && Array.isArray(body.carrinhos),
   );
 
-  const cartResponse = http.get(`${BASE_URL}/carrinhos/${encodeURIComponent(CART_ID)}`, {
+  const cartResponse = http.get(`${BASE_URL}/carrinhos/${encodeURIComponent(fixture.cartId)}`, {
     tags: { name: 'load.carts.get' },
   });
   checkJsonResponse(
