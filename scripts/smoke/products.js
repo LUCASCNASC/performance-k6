@@ -1,9 +1,17 @@
 import http from 'k6/http';
-import { BASE_URL, PRODUCT_ID, checkJsonResponse, SMOKE_OPTIONS } from '../common.js';
+import { BASE_URL, checkJsonResponse, createFixture, SMOKE_OPTIONS, teardownFixture } from '../common.js';
 
 export const options = SMOKE_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('products');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const productsResponse = http.get(`${BASE_URL}/produtos`, {
     tags: { name: 'smoke.products.list' },
   });
@@ -13,7 +21,7 @@ export default function () {
     (body) => Number.isInteger(body.quantidade) && Array.isArray(body.produtos),
   );
 
-  const productResponse = http.get(`${BASE_URL}/produtos/${encodeURIComponent(PRODUCT_ID)}`, {
+  const productResponse = http.get(`${BASE_URL}/produtos/${encodeURIComponent(fixture.productId)}`, {
     tags: { name: 'smoke.products.get' },
   });
   checkJsonResponse(

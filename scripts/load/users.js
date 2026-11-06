@@ -1,9 +1,17 @@
 import http from 'k6/http';
-import { BASE_URL, LOAD_OPTIONS, USER_ID, checkJsonResponse } from '../common.js';
+import { BASE_URL, LOAD_OPTIONS, checkJsonResponse, createFixture, teardownFixture } from '../common.js';
 
 export const options = LOAD_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('users');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const usersResponse = http.get(`${BASE_URL}/usuarios`, {
     tags: { name: 'load.users.list' },
   });
@@ -13,7 +21,7 @@ export default function () {
     (body) => Number.isInteger(body.quantidade) && Array.isArray(body.usuarios),
   );
 
-  const userResponse = http.get(`${BASE_URL}/usuarios/${encodeURIComponent(USER_ID)}`, {
+  const userResponse = http.get(`${BASE_URL}/usuarios/${encodeURIComponent(fixture.user.id)}`, {
     tags: { name: 'load.users.get' },
   });
   checkJsonResponse(

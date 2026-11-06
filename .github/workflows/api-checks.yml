@@ -10,11 +10,6 @@ permissions:
 
 env:
   BASE_URL: ${{ vars.SERVEREST_BASE_URL || 'https://serverest.dev' }}
-  USER_EMAIL: ${{ secrets.SERVEREST_USER_EMAIL || 'fulano@qa.com' }}
-  USER_PASSWORD: ${{ secrets.SERVEREST_USER_PASSWORD || 'teste' }}
-  USER_ID: ${{ vars.SERVEREST_USER_ID || '0uxuPY0cbmQhpEz1' }}
-  PRODUCT_ID: ${{ vars.SERVEREST_PRODUCT_ID || 'BeeJh5lz3k6kSIzA' }}
-  CART_ID: ${{ vars.SERVEREST_CART_ID || 'qbMqntef4iTOwWfg' }}
 
 jobs:
   tests:
@@ -44,7 +39,7 @@ jobs:
 
       - name: Inspect k6 scripts
         run: |
-          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js scripts/load/login.js scripts/load/users.js scripts/load/products.js scripts/load/carts.js; do
+          for script in scripts/smoke/login.js scripts/smoke/users.js scripts/smoke/products.js scripts/smoke/carts.js scripts/load/login.js scripts/load/users.js scripts/load/products.js scripts/load/carts.js scripts/spike/login.js scripts/spike/users.js scripts/spike/products.js scripts/spike/carts.js; do
             k6 inspect "$script"
           done
 

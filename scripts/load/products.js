@@ -1,9 +1,17 @@
 import http from 'k6/http';
-import { BASE_URL, LOAD_OPTIONS, PRODUCT_ID, checkJsonResponse } from '../common.js';
+import { BASE_URL, LOAD_OPTIONS, checkJsonResponse, createFixture, teardownFixture } from '../common.js';
 
 export const options = LOAD_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('products');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const productsResponse = http.get(`${BASE_URL}/produtos`, {
     tags: { name: 'load.products.list' },
   });
@@ -13,7 +21,7 @@ export default function () {
     (body) => Number.isInteger(body.quantidade) && Array.isArray(body.produtos),
   );
 
-  const productResponse = http.get(`${BASE_URL}/produtos/${encodeURIComponent(PRODUCT_ID)}`, {
+  const productResponse = http.get(`${BASE_URL}/produtos/${encodeURIComponent(fixture.productId)}`, {
     tags: { name: 'load.products.get' },
   });
   checkJsonResponse(

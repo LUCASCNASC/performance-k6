@@ -1,13 +1,21 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import { BASE_URL, SMOKE_OPTIONS } from '../common.js';
+import { BASE_URL, createFixture, SMOKE_OPTIONS, teardownFixture } from '../common.js';
 
 export const options = SMOKE_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('login');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const payload = JSON.stringify({
-    email: __ENV.USER_EMAIL || 'fulano@qa.com',
-    password: __ENV.USER_PASSWORD || 'teste',
+    email: fixture.user.email,
+    password: fixture.user.password,
   });
 
   const response = http.post(`${BASE_URL}/login`, payload, {

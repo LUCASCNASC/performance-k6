@@ -1,6 +1,6 @@
 # Load tests do ServeRest
 
-Os cenários exercitam os mesmos endpoints dos smoke tests: login, listagem/consulta de usuários, listagem/consulta de produtos e listagem/consulta de carrinhos. Todos são somente leitura, exceto o login, que apenas autentica. Configuração, dados de ambiente e verificações compartilhados por todas as categorias de teste ficam em [`scripts/common.js`](../common.js).
+Os cenários exercitam os mesmos endpoints dos smoke tests: login, listagem/consulta de usuários, listagem/consulta de produtos e listagem/consulta de carrinhos. Como os dados do ambiente são apagados todas as noites, cada execução cria fixtures próprias no `setup` do k6 e as remove no `teardown`. Configuração, criação/limpeza dos dados e verificações compartilhadas ficam em [`scripts/common.js`](../common.js).
 
 ## Perfil padrão
 
@@ -19,10 +19,10 @@ k6 run .\scripts\load\products.js
 k6 run .\scripts\load\carts.js
 ```
 
-Os testes usam `BASE_URL`, `USER_EMAIL`, `USER_PASSWORD`, `USER_ID`, `PRODUCT_ID` e `CART_ID`, compartilhados com os smoke tests. Para sobrescrever o perfil de carga em uma execução, passe opções do k6 na linha de comando, por exemplo:
+Os testes usam `BASE_URL`, compartilhado com os smoke tests. Para sobrescrever o perfil de carga em uma execução, passe opções do k6 na linha de comando, por exemplo:
 
 ```powershell
 k6 run --vus 3 --duration 30s .\scripts\load\products.js
 ```
 
-Execute carga somente contra ambientes que você tem autorização para testar. Os testes de carga não são executados automaticamente no GitHub Actions para evitar gerar carga involuntária no serviço público ServeRest.
+Execute carga somente contra ambientes que você tem autorização para testar, pois cada execução cria e remove temporariamente dados e pode gerar carga significativa. Os testes de carga não são executados automaticamente no GitHub Actions para evitar gerar carga involuntária no serviço público ServeRest.

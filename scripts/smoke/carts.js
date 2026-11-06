@@ -1,9 +1,17 @@
 import http from 'k6/http';
-import { BASE_URL, CART_ID, checkJsonResponse, SMOKE_OPTIONS } from '../common.js';
+import { BASE_URL, checkJsonResponse, createFixture, SMOKE_OPTIONS, teardownFixture } from '../common.js';
 
 export const options = SMOKE_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('carts');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const cartsResponse = http.get(`${BASE_URL}/carrinhos`, {
     tags: { name: 'smoke.carts.list' },
   });
@@ -13,7 +21,7 @@ export default function () {
     (body) => Number.isInteger(body.quantidade) && Array.isArray(body.carrinhos),
   );
 
-  const cartResponse = http.get(`${BASE_URL}/carrinhos/${encodeURIComponent(CART_ID)}`, {
+  const cartResponse = http.get(`${BASE_URL}/carrinhos/${encodeURIComponent(fixture.cartId)}`, {
     tags: { name: 'smoke.carts.get' },
   });
   checkJsonResponse(
