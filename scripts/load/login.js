@@ -1,13 +1,21 @@
 import http from 'k6/http';
-import { check } from 'k6';
-import { BASE_URL, LOAD_OPTIONS } from '../common.js';
+import { check, sleep } from 'k6';
+import { BASE_URL, createFixture, LOAD_OPTIONS, teardownFixture } from '../common.js';
 
 export const options = LOAD_OPTIONS;
 
-export default function () {
+export function setup() {
+  return createFixture('login');
+}
+
+export function teardown(fixture) {
+  teardownFixture(fixture);
+}
+
+export default function (fixture) {
   const payload = JSON.stringify({
-    email: __ENV.USER_EMAIL || 'fulano@qa.com',
-    password: __ENV.USER_PASSWORD || 'teste',
+    email: fixture.user.email,
+    password: fixture.user.password,
   });
 
   const response = http.post(`${BASE_URL}/login`, payload, {
@@ -31,4 +39,6 @@ export default function () {
     'Login: mensagem de sucesso': () => body !== null && body.message === 'Login realizado com sucesso',
     'Login: token de autorização presente': () => body !== null && typeof body.authorization === 'string' && body.authorization.length > 0,
   });
+
+  sleep(1);
 }
