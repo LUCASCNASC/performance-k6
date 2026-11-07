@@ -33,6 +33,10 @@ const k6Scripts = [
   'scripts/spike/users.js',
   'scripts/spike/products.js',
   'scripts/spike/carts.js',
+  'scripts/stress/login.js',
+  'scripts/stress/users.js',
+  'scripts/stress/products.js',
+  'scripts/stress/carts.js',
 ];
 
 const response = await fetch(contractUrl, { signal: AbortSignal.timeout(15000) });
