@@ -287,6 +287,18 @@ export const STRESS_OPTIONS = {
   },
 };
 
+export const ENDURANCE_OPTIONS = {
+  stages: [
+    { duration: '10s', target: 5 },
+    { duration: '1m', target: 5 },
+    { duration: '10s', target: 0 },
+  ],
+  thresholds: {
+    checks: ['rate==1'],
+    http_req_failed: ['rate<0.05'],
+  },
+};
+
 export const SPIKE_OPTIONS = {
   stages: [
     { duration: '10s', target: 1 },
