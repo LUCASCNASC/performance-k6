@@ -121,7 +121,7 @@ function loginFixtureUser(user) {
   return response.authorization;
 }
 
-function createProductFixture(authorization) {
+function createProductFixture(authorization, quantity = 100) {
   const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
   const response = requestJson(
     'POST',
@@ -131,7 +131,7 @@ function createProductFixture(authorization) {
       nome: `k6 test product ${uniqueId}`,
       preco: 10,
       descricao: `Temporary k6 fixture ${uniqueId}`,
-      quantidade: 100,
+      quantidade: quantity,
     },
     authorization,
     'products.create',
@@ -251,6 +251,168 @@ export function createFixture(type) {
   }
 }
 
+export function createVolumeFixture(type, recordCount) {
+  if (!['users', 'products', 'carts'].includes(type)) {
+    throw new Error(`Unknown volume fixture type: ${type}`);
+  }
+  if (!Number.isInteger(recordCount) || recordCount < 1 || recordCount > 25) {
+    throw new Error('Volume fixture record count must be between 1 and 25');
+  }
+
+  const fixture = {
+    type,
+    admin: null,
+    users: [],
+    products: [],
+    carts: [],
+  };
+
+  try {
+    let adminAuthorization;
+
+    if (type !== 'users') {
+      fixture.admin = createUserFixture(true);
+      adminAuthorization = loginFixtureUser(fixture.admin);
+    }
+
+    if (type === 'users') {
+      for (let index = 0; index < recordCount; index += 1) {
+        fixture.users.push(createUserFixture(false));
+      }
+    } else if (type === 'products') {
+      for (let index = 0; index < recordCount; index += 1) {
+        fixture.products.push(createProductFixture(adminAuthorization));
+      }
+    } else {
+      const product = createProductFixture(adminAuthorization, recordCount);
+      fixture.products.push(product);
+
+      for (let index = 0; index < recordCount; index += 1) {
+        const user = createUserFixture(false);
+        const cart = { user, cartId: null };
+        fixture.carts.push(cart);
+
+        const authorization = loginFixtureUser(user);
+        cart.cartId = createCartFixture(product, authorization);
+      }
+    }
+
+    return fixture;
+  } catch (error) {
+    try {
+      teardownVolumeFixture(fixture);
+    } catch (cleanupError) {
+      throw new Error(`${error.message}; volume fixture cleanup also failed: ${cleanupError.message}`);
+    }
+
+    throw error;
+  }
+}
+
+export function teardownVolumeFixture(fixture) {
+  if (!fixture) {
+    throw new Error('Cannot clean up a missing volume fixture');
+  }
+
+  const errors = [];
+  const attempt = (name, action) => {
+    try {
+      action();
+    } catch (error) {
+      errors.push(`${name}: ${error.message}`);
+    }
+  };
+
+  for (const cart of fixture.carts) {
+    if (cart.cartId) {
+      attempt(`cancel cart ${cart.cartId}`, () => {
+        const authorization = loginFixtureUser(cart.user);
+        requestJson(
+          'DELETE',
+          '/carrinhos/cancelar-compra',
+          200,
+          undefined,
+          authorization,
+          'carts.cancel',
+        );
+      });
+    }
+
+    attempt(`delete user ${cart.user.id}`, () => {
+      requestJson(
+        'DELETE',
+        `/usuarios/${encodeURIComponent(cart.user.id)}`,
+        200,
+        undefined,
+        null,
+        'users.delete',
+      );
+    });
+  }
+
+  for (const user of fixture.users) {
+    attempt(`delete user ${user.id}`, () => {
+      requestJson(
+        'DELETE',
+        `/usuarios/${encodeURIComponent(user.id)}`,
+        200,
+        undefined,
+        null,
+        'users.delete',
+      );
+    });
+  }
+
+  let productsCleaned = true;
+  let adminAuthorization;
+  if (fixture.products.length > 0) {
+    try {
+      if (!fixture.admin) {
+        throw new Error('Cannot authenticate without the volume fixture admin');
+      }
+      adminAuthorization = loginFixtureUser(fixture.admin);
+    } catch (error) {
+      errors.push(`authenticate volume fixture admin for cleanup: ${error.message}`);
+      productsCleaned = false;
+    }
+  }
+
+  if (adminAuthorization) {
+    for (const productId of fixture.products) {
+      try {
+        requestJson(
+          'DELETE',
+          `/produtos/${encodeURIComponent(productId)}`,
+          200,
+          undefined,
+          adminAuthorization,
+          'products.delete',
+        );
+      } catch (error) {
+        errors.push(`delete product ${productId}: ${error.message}`);
+        productsCleaned = false;
+      }
+    }
+  }
+
+  if (fixture.admin && productsCleaned) {
+    attempt(`delete admin ${fixture.admin.id}`, () => {
+      requestJson(
+        'DELETE',
+        `/usuarios/${encodeURIComponent(fixture.admin.id)}`,
+        200,
+        undefined,
+        null,
+        'users.delete',
+      );
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Volume fixture cleanup failed: ${errors.join('; ')}`);
+  }
+}
+
 export const SMOKE_OPTIONS = {
   vus: 1,
   iterations: 1,
@@ -293,6 +455,17 @@ export const ENDURANCE_OPTIONS = {
     { duration: '1m', target: 5 },
     { duration: '10s', target: 0 },
   ],
+  thresholds: {
+    checks: ['rate==1'],
+    http_req_failed: ['rate<0.05'],
+  },
+};
+
+export const VOLUME_RECORD_COUNT = 25;
+
+export const VOLUME_OPTIONS = {
+  vus: 1,
+  iterations: 5,
   thresholds: {
     checks: ['rate==1'],
     http_req_failed: ['rate<0.05'],
