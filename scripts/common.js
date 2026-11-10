@@ -461,6 +461,14 @@ export const ENDURANCE_OPTIONS = {
   },
 };
 
+export const SCALABILITY_OPTIONS = {
+  stages: [
+    { duration: '10s', target: 1 },
+    { duration: '10s', target: 2 },
+    { duration: '10s', target: 3 },
+    { duration: '10s', target: 5 },
+    { duration: '10s', target: 0 },
+  ],
 export const VOLUME_RECORD_COUNT = 25;
 
 export const VOLUME_OPTIONS = {

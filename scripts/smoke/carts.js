@@ -205,6 +205,22 @@ export default function () {
     }
     cartId = null;
 
+    // Contrato travado: cancelamento sem carrinho responde 200 com mensagem específica.
+    const noCartResponse = http.del(`${BASE_URL}/carrinhos/cancelar-compra`, null, {
+      headers: { Authorization: token },
+      tags: { name: 'smoke.carts.cancel-without-cart' },
+    });
+    if (
+      !checkJsonStatusResponse(
+        noCartResponse,
+        'Cancelamento sem carrinho (contrato)',
+        200,
+        (body) => body.message === 'Não foi encontrado carrinho para esse usuário',
+      )
+    ) {
+      break;
+    }
+
     const secondCartResponse = http.post(
       `${BASE_URL}/carrinhos`,
       JSON.stringify({ produtos: items }),
@@ -225,6 +241,29 @@ export default function () {
     );
     if (!secondCart) break;
     cartId = secondCart._id;
+
+    // Contrato travado: não é permitido ter mais de 1 carrinho por usuário.
+    const duplicateCartResponse = http.post(
+      `${BASE_URL}/carrinhos`,
+      JSON.stringify({ produtos: items }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+        tags: { name: 'smoke.carts.create-duplicate-cart' },
+      },
+    );
+    if (
+      !checkJsonStatusResponse(
+        duplicateCartResponse,
+        'Segundo carrinho do mesmo usuário (contrato)',
+        400,
+        (body) => body.message === 'Não é permitido ter mais de 1 carrinho',
+      )
+    ) {
+      break;
+    }
 
     const checkoutResponse = http.del(`${BASE_URL}/carrinhos/concluir-compra`, null, {
       headers: { Authorization: token },
