@@ -46,6 +46,9 @@ const k6Scripts = [
   'scripts/scalability/users.js',
   'scripts/scalability/products.js',
   'scripts/scalability/carts.js',
+  'scripts/volume/users.js',
+  'scripts/volume/products.js',
+  'scripts/volume/carts.js',
 ];
 
 const response = await fetch(contractUrl, { signal: AbortSignal.timeout(15000) });
