@@ -61,6 +61,22 @@ export default function () {
       break;
     }
 
+    // Contrato travado: email duplicado responde 400 com mensagem específica.
+    const duplicateEmailResponse = http.post(`${BASE_URL}/usuarios`, JSON.stringify(user), {
+      headers: { 'Content-Type': 'application/json' },
+      tags: { name: 'smoke.users.create-duplicate-email' },
+    });
+    if (
+      !checkJsonStatusResponse(
+        duplicateEmailResponse,
+        'Cadastro com email já usado (contrato)',
+        400,
+        (body) => body.message === 'Este email já está sendo usado',
+      )
+    ) {
+      break;
+    }
+
     const updatedUser = Object.assign({}, user, { nome: `${user.nome} atualizado` });
     const updateResponse = http.put(
       `${BASE_URL}/usuarios/${encodeURIComponent(userId)}`,

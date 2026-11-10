@@ -93,6 +93,43 @@ export default function () {
     if (!createdProduct) break;
     productId = createdProduct._id;
 
+    // Contrato travado: nome de produto duplicado responde 400 com mensagem específica.
+    const duplicateNameResponse = http.post(`${BASE_URL}/produtos`, JSON.stringify(product), {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      tags: { name: 'smoke.products.create-duplicate-name' },
+    });
+    if (
+      !checkJsonStatusResponse(
+        duplicateNameResponse,
+        'Cadastro com nome já usado (contrato)',
+        400,
+        (body) => body.message === 'Já existe produto com esse nome',
+      )
+    ) {
+      break;
+    }
+
+    // Contrato travado: escrita sem token responde 401 com mensagem específica.
+    const unauthorizedResponse = http.post(`${BASE_URL}/produtos`, JSON.stringify(product), {
+      headers: { 'Content-Type': 'application/json' },
+      tags: { name: 'smoke.products.create-without-token' },
+    });
+    if (
+      !checkJsonStatusResponse(
+        unauthorizedResponse,
+        'Escrita sem token (contrato)',
+        401,
+        (body) =>
+          body.message ===
+          'Token de acesso ausente, inválido, expirado ou usuário do token não existe mais',
+      )
+    ) {
+      break;
+    }
+
     const productResponse = http.get(`${BASE_URL}/produtos/${encodeURIComponent(productId)}`, {
       tags: { name: 'smoke.products.get' },
     });

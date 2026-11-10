@@ -299,6 +299,20 @@ export const ENDURANCE_OPTIONS = {
   },
 };
 
+export const SCALABILITY_OPTIONS = {
+  stages: [
+    { duration: '10s', target: 1 },
+    { duration: '10s', target: 2 },
+    { duration: '10s', target: 3 },
+    { duration: '10s', target: 5 },
+    { duration: '10s', target: 0 },
+  ],
+  thresholds: {
+    checks: ['rate==1'],
+    http_req_failed: ['rate<0.05'],
+  },
+};
+
 export const SPIKE_OPTIONS = {
   stages: [
     { duration: '10s', target: 1 },

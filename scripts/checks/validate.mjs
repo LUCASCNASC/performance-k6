@@ -37,10 +37,15 @@ const k6Scripts = [
   'scripts/stress/users.js',
   'scripts/stress/products.js',
   'scripts/stress/carts.js',
+  'scripts/stress/cart-stock-race.js',
   'scripts/endurance/login.js',
   'scripts/endurance/users.js',
   'scripts/endurance/products.js',
   'scripts/endurance/carts.js',
+  'scripts/scalability/login.js',
+  'scripts/scalability/users.js',
+  'scripts/scalability/products.js',
+  'scripts/scalability/carts.js',
 ];
 
 const response = await fetch(contractUrl, { signal: AbortSignal.timeout(15000) });
