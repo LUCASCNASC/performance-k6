@@ -469,6 +469,12 @@ export const SCALABILITY_OPTIONS = {
     { duration: '10s', target: 5 },
     { duration: '10s', target: 0 },
   ],
+  thresholds: {
+    checks: ['rate==1'],
+    http_req_failed: ['rate<0.05'],
+  },
+};
+
 export const VOLUME_RECORD_COUNT = 25;
 
 export const VOLUME_OPTIONS = {
