@@ -14,6 +14,12 @@ k6 run .\scripts\volume\products.js
 k6 run .\scripts\volume\carts.js
 ```
 
-`BASE_URL` seleciona o ambiente; o padrão é `https://serverest.dev`. Cada execução cria registros temporários e pode alterar o estoque enquanto prepara carrinhos. O setup está limitado a 25 registros de coleção por execução. Execute somente em um ambiente autorizado e confira a saída do k6 para garantir que o teardown concluiu sem erros.
+Defina `BASE_URL` explicitamente para o ambiente autorizado antes de executar:
+
+```powershell
+$env:BASE_URL = "http://localhost:3000"
+```
+
+Cada execução cria registros temporários e pode alterar o estoque enquanto prepara carrinhos. O setup está limitado a 25 registros de coleção por execução. Confira a saída do k6 para garantir que o teardown concluiu sem erros.
 
 Os cenários não são executados automaticamente no GitHub Actions. Não aumente o volume ou a concorrência sem um ambiente controlado e autorização para gerar a carga.

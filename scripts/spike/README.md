@@ -1,6 +1,6 @@
 # Spike tests do ServeRest
 
-Os cenários simulam um aumento súbito de carga na autenticação ou nas consultas de usuários, produtos e carrinhos. Como os dados do ambiente são apagados todas as noites, cada execução cria fixtures próprias antes do teste e as remove ao final. Configuração e ciclo de vida compartilhados ficam em [`scripts/common.js`](../common.js).
+Os cenários simulam um aumento súbito de carga na autenticação ou nas consultas de usuários, produtos e carrinhos. Como os dados do ambiente são apagados todas as noites, cada execução cria fixtures próprias antes do teste e as remove ao final. Configuração, fixtures e perfis ficam em módulos sob [`scripts/lib/`](../lib/), reexportados por [`scripts/common.js`](../common.js).
 
 ## Perfil padrão
 
@@ -17,6 +17,10 @@ k6 run .\scripts\spike\products.js
 k6 run .\scripts\spike\carts.js
 ```
 
-Os scripts usam a variável `BASE_URL` para selecionar o ambiente. Consulte [`scripts/smoke/README.md`](../smoke/README.md) para detalhes de configuração.
+Defina `BASE_URL` explicitamente para o ambiente autorizado antes de executar:
+
+```powershell
+$env:BASE_URL = "http://localhost:3000"
+```
 
 Spike tests criam e removem temporariamente dados e podem gerar carga elevada em pouco tempo. Execute-os somente em ambientes que você tem autorização para testar; eles não são executados automaticamente no GitHub Actions.
