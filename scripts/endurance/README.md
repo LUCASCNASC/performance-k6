@@ -2,13 +2,14 @@
 
 Os cenários demonstram uma carga estável e prolongada sobre autenticação ou consultas de usuários, produtos e carrinhos. Para evitar uma execução longa ou excessiva por padrão, o perfil é somente uma demonstração: mantém 5 VUs por 1 minuto, além de 10 segundos para subida e 10 segundos para encerramento (80 segundos no total).
 
-Cada script cria uma fixture antes da carga e a remove ao final. Os testes não dependem de dados preexistentes, que podem ser apagados diariamente. A execução requer acesso autorizado ao ambiente configurado em `BASE_URL`; por padrão, usa `https://serverest.dev`.
+Cada script cria uma fixture antes da carga e a remove ao final. Os testes não dependem de dados preexistentes, que podem ser apagados diariamente. Defina `BASE_URL` explicitamente para o ambiente autorizado antes de executar:
 
 ## Executar
 
 Na raiz do repositório:
 
 ```powershell
+$env:BASE_URL = "http://localhost:3000"
 k6 run .\scripts\endurance\login.js
 k6 run .\scripts\endurance\users.js
 k6 run .\scripts\endurance\products.js

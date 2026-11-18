@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
-import { BASE_URL } from '../common.js';
+import { BASE_URL, requirePerformanceBaseUrl } from '../common.js';
 
 const createdCarts = new Counter('race_carts_created');
 const stockRejections = new Counter('race_stock_rejections');
@@ -47,6 +47,8 @@ function json(method, path, payload, authorization, expectedStatus, name) {
 }
 
 export function setup() {
+  requirePerformanceBaseUrl();
+
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
   const admin = {
     nome: `k6 race admin ${suffix}`,

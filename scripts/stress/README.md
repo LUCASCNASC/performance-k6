@@ -17,6 +17,13 @@ k6 run .\scripts\stress\products.js
 k6 run .\scripts\stress\carts.js
 ```
 
-`BASE_URL` seleciona o ambiente; o padrão é `https://serverest.dev`. Cada teste cria e remove temporariamente os dados necessários, por isso execute-o somente em um ambiente no qual essas operações estejam autorizadas.
+Defina `BASE_URL` explicitamente para o ambiente autorizado antes de executar; os testes de carga não usam o host público como fallback:
+
+```powershell
+$env:BASE_URL = "http://localhost:3000"
+k6 run .\scripts\stress\users.js
+```
+
+Cada teste cria e remove temporariamente os dados necessários.
 
 Stress tests podem degradar o serviço e não são executados automaticamente no GitHub Actions. Comece em um ambiente controlado; ajuste estágios e VUs na linha de comando somente quando o ambiente e a capacidade disponível forem conhecidos.

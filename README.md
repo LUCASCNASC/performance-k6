@@ -2,18 +2,17 @@
 
 ## Fast validation
 
-Before pushing changes, run the same read-only checks used by the validation job:
+Before pushing changes, run the same validation checks used by the workflow:
 
 ```powershell
 node .\scripts\checks\validate.mjs
+node .\scripts\checks\validate-fixtures.mjs
 ```
 
-This checks that the ServeRest OpenAPI contract still contains the required operations and that k6 can load every smoke, load, spike, stress, endurance, and scalability script. It requires Node.js, k6 on `PATH`, and an internet connection. It does not send requests to the API or create test data.
-This checks that the ServeRest OpenAPI contract still contains the required operations and that k6 can load every smoke, load, spike, stress, endurance, and volume script. It requires Node.js, k6 on `PATH`, and an internet connection. It does not send requests to the API or create test data.
+The first command validates a pinned ServeRest OpenAPI contract and asks k6 to load every script. The second runs the load-test fixtures against a local API stub to verify setup and teardown; it does not call ServeRest or create remote data. Both commands require Node.js and k6 on `PATH`; the first also needs internet access to download the contract.
 
-The GitHub Actions workflow also runs the smoke tests against `BASE_URL`. Those tests exercise API behavior and create temporary records; configure `BASE_URL` to an environment you are authorized to test before running them locally. See [`scripts/smoke/README.md`](scripts/smoke/README.md) for the commands and configuration.
+The GitHub Actions workflow also runs smoke tests against `BASE_URL`. Those tests exercise API behavior and create temporary records; run them only against an environment you are authorized to test. See [`scripts/smoke/README.md`](scripts/smoke/README.md) for the commands and configuration.
 
-The endurance profiles are short demonstrations (5 VUs for 1 minute) and are not run automatically in CI. See [`scripts/endurance/README.md`](scripts/endurance/README.md) before running them.
+Load, spike, stress, endurance, scalability, and volume tests require `BASE_URL` to be set explicitly, to avoid accidentally generating traffic against the public default. They are not run automatically in CI. Check each category's README before running them.
 
-The scalability profiles gradually increase to 5 VUs and are not run automatically in CI. See [`scripts/scalability/README.md`](scripts/scalability/README.md) before running them.
-The volume profiles create up to 25 temporary records per scenario and are not run automatically in CI. See [`scripts/volume/README.md`](scripts/volume/README.md) before running them.
+Shared configuration, response checks, fixture lifecycle, and k6 profiles are separated into modules under [`scripts/lib/`](scripts/lib/); [`scripts/common.js`](scripts/common.js) re-exports them for the scenario scripts.

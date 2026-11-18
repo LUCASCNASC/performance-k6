@@ -25,6 +25,7 @@ a baixa é read-then-write sem controle de concorrência.
 ## Executar
 
 ```powershell
+$env:BASE_URL = "http://localhost:3000"
 k6 run .\scripts\stress\cart-stock-race.js
 ```
 
@@ -32,7 +33,7 @@ Variáveis opcionais:
 
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
-| `BASE_URL` | `https://serverest.dev` | URL da API |
+| `BASE_URL` | obrigatório | URL da API autorizada |
 | `RACE_VUS` | `10` | VUs disputando o mesmo produto |
 | `RACE_QTY` | `1` | quantidade por carrinho |
 

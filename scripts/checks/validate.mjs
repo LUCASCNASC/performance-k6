@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 
 const contractUrl =
-  'https://raw.githubusercontent.com/ServeRest/ServeRest/trunk/docs/swagger.json';
+  'https://raw.githubusercontent.com/ServeRest/ServeRest/c52ce7359a414febd771ae394e66a8718a974e28/docs/swagger.json';
 const requiredOperations = [
   ['post', '/login'],
   ['get', '/usuarios'],

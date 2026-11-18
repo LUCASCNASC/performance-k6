@@ -28,6 +28,9 @@ jobs:
       - name: Run fast validation
         run: node scripts/checks/validate.mjs
 
+      - name: Verify fixture setup and teardown against local stub
+        run: node scripts/checks/validate-fixtures.mjs
+
   smoke:
     name: Smoke test (${{ matrix.script }})
     runs-on: ubuntu-latest

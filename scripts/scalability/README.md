@@ -15,7 +15,13 @@ k6 run .\scripts\scalability\products.js
 k6 run .\scripts\scalability\carts.js
 ```
 
-`BASE_URL` seleciona o ambiente; o padrão é `https://serverest.dev`. Cada execução cria e remove temporariamente os dados necessários. Execute somente em um ambiente autorizado e confira a saída do k6 para confirmar que o teardown terminou sem erros.
+Defina `BASE_URL` explicitamente para o ambiente autorizado antes de executar:
+
+```powershell
+$env:BASE_URL = "http://localhost:3000"
+```
+
+Cada execução cria e remove temporariamente os dados necessários. Confira a saída do k6 para confirmar que o teardown terminou sem erros.
 
 Os thresholds exigem 100% de checks bem-sucedidos e menos de 5% de requisições HTTP com erro. Eles são critérios de verificação do script, não um SLA nem uma indicação automática da capacidade da aplicação. Compare as métricas de duração e taxa de erro entre as etapas de carga para observar a tendência.
 
